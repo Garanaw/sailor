@@ -1,0 +1,17 @@
+{
+    "name": "garanaw/sailor",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Garanaw\\Sailor\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "alun",
+            "email": "garanaw@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
