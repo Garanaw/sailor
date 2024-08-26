@@ -6,11 +6,10 @@ namespace Garanaw\Sailor;
 
 use Garanaw\Sailor\Console\InstallCommand;
 use Garanaw\Sailor\Console\PublishCommand;
-use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 
-class SailorServiceProvider extends ServiceProvider implements DeferrableProvider
+class SailorServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
