@@ -7,14 +7,25 @@ namespace Garanaw\Sailor;
 use Garanaw\Sailor\Console\InstallCommand;
 use Garanaw\Sailor\Console\PublishCommand;
 use Illuminate\Contracts\Support\DeferrableProvider;
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 
 class SailorServiceProvider extends ServiceProvider implements DeferrableProvider
 {
     public function boot(): void
     {
+        $this->about();
         $this->registerCommands();
         $this->configurePublishing();
+    }
+
+    protected function about(): void
+    {
+        AboutCommand::add('Sailor', [
+            'version' => '1.0.0',
+            'by' => 'Garanaw',
+            'description' => 'An extension to Laravel Sail',
+        ]);
     }
 
     protected function registerCommands(): void
