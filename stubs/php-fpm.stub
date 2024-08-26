@@ -1,0 +1,29 @@
+laravel.app:
+    build:
+        context: ./docker/local/php
+        dockerfile: Dockerfile
+        args:
+            WWWUSER: ${WWWUSER}
+            WWWGROUP: ${WWWGROUP}
+        tags:
+            - laravel-local
+    image: laravel-local:latest
+    extra_hosts:
+        - 'host.docker.internal:host-gateway'
+    ports:
+        - '9000:9000'
+        - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    environment:
+        WWWUSER: ${WWWUSER}
+        LARAVEL_SAIL: 1
+        XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+        XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+        IGNITION_LOCAL_SITES_PATH: '${PWD}'
+    volumes:
+        - '.:/var/www/html'
+    networks:
+        - cb
+    expose: ['8000', '9000']
+    depends_on:
+        - ${APP_NAME}.mysql
+        - ${APP_NAME}.redis

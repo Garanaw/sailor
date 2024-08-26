@@ -1,0 +1,14 @@
+nginx:
+    build:
+        context: .
+        dockerfile: ./docker/nginx/nginx.Dockerfile
+    image: 'nginx:alpine'
+    ports:
+        - '${APP_PORT:-80}:80'
+    volumes:
+        - '.:/var/www/html'
+        - './docker/nginx/dev.conf:/etc/nginx/conf.d/default.conf'
+    networks:
+        - cb
+    depends_on:
+        - laravel.app
