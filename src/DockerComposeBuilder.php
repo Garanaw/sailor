@@ -51,11 +51,7 @@ class DockerComposeBuilder
 
     public function buildDockerCompose($services): void
     {
-        $composePath = base_path('docker-compose.yml');
-
-        $compose = file_exists($composePath)
-            ? Yaml::parseFile($composePath)
-            : Yaml::parse(file_get_contents(__DIR__ . '/../../../stubs/docker-compose.stub'));
+        $compose = $this->composeFile();
 
         // Adds the new services as dependencies of the laravel.test service...
         if (! array_key_exists('laravel.test', $compose['services'])) {
@@ -66,6 +62,13 @@ class DockerComposeBuilder
                 ->unique()
                 ->values()
                 ->all();
+        }
+
+        // Update the dependencies if the MariaDB service is used...
+        if (in_array('mariadb', $services)) {
+            $compose['services']['laravel.test']['depends_on'] = array_map(function ($dependedItem) {
+                return $dependedItem;
+            }, $compose['services']['laravel.test']['depends_on']);
         }
 
         // Add the services to the docker-compose.yml...
@@ -97,6 +100,27 @@ class DockerComposeBuilder
         }
 
         file_put_contents($this->laravel->basePath('docker-compose.yml'), Yaml::dump($compose, Yaml::DUMP_OBJECT_AS_MAP));
+    }
+
+    protected function composeFile(?string $path = null): mixed
+    {
+        // If the file exists, we parse it and return the content...
+        $composePath = base_path($path ?? 'docker-compose.yml');
+        if (file_exists($composePath)) {
+            return Yaml::parseFile($composePath);
+        }
+
+        // If no file exists, we'll try to return Sail's default docker-compose.yml as per version 1.31...
+        $sailPath = __DIR__ . '/../../../vendor/laravel/sail/stubs/docker-compose.stub';
+        if (file_exists($sailPath)) {
+            return Yaml::parseFile($sailPath);
+        }
+
+        // If no file exists, we'll try to return our own default docker-compose.yml...
+        $ownPath = __DIR__ . '/../../../stubs/docker-compose.stub';
+        return file_exists($ownPath)
+            ? Yaml::parseFile($ownPath)
+            : [];
     }
 
     protected function pathFor(string $service): string

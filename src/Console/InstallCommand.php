@@ -55,6 +55,7 @@ class InstallCommand extends SailInstallCommand
     public function handle(): int {
         $this->info('Installing Laravel Sailor...');
 
+        /** @var DockerComposeBuilder $builder */
         $builder = $this->laravel->make(DockerComposeBuilder::class);
 
         if ($this->option('with')) {
