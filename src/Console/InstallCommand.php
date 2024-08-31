@@ -66,6 +66,11 @@ class InstallCommand extends SailInstallCommand
             $services = $builder->gatherServicesInteractively($this->services, $this->defaultServices);
         }
 
+        // If the user is not using Sailor, we shall let the original Laravel Sail handle the installation.
+        if ($builder->isUsingSailor($services) === false) {
+            return parent::handle();
+        }
+
         if ($invalidServices = array_diff($services, $this->services)) {
             $this->components->error('Invalid services ['.implode(',', $invalidServices).'].');
 

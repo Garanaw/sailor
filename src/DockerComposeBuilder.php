@@ -49,6 +49,11 @@ class DockerComposeBuilder
         );
     }
 
+    public function isUsingSailor(array $selectedServices): bool
+    {
+        return count(array_intersect($selectedServices, $this->ownServices)) > 0;
+    }
+
     public function buildDockerCompose($services): void
     {
         $compose = $this->composeFile();
