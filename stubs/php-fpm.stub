@@ -22,7 +22,7 @@ laravel.app:
     volumes:
         - '.:/var/www/html'
     networks:
-        - cb
+        - sail
     expose: ['8000', '9000']
     depends_on:
         - ${APP_NAME}.mysql
