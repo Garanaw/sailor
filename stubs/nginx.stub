@@ -11,4 +11,4 @@ nginx:
     networks:
         - cb
     depends_on:
-        - laravel.app
+        - laravel.test
