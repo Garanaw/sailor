@@ -31,14 +31,14 @@ class DockerComposeBuilder
         'soketi',
     ];
 
-    protected array $stubPaths = [
-        'own' => __DIR__ . '/../../../stubs',
-        'sail' => __DIR__ . '/../../../vendor/laravel/sail/stubs',
+    protected array $keyMapping = [
+        'php-fpm' => 'laravel.test',
     ];
 
-    public function __construct(private Container $laravel)
-    {
-    }
+    protected array $stubPaths = [
+        'own' => '/vendor/garanaw/sailor/stubs',
+        'sail' => '/vendor/laravel/sail/stubs',
+    ];
 
     public function gatherServicesInteractively(array $options, array $default = []): array
     {
@@ -57,6 +57,9 @@ class DockerComposeBuilder
     public function buildDockerCompose($services): void
     {
         $compose = $this->composeFile();
+
+        // As php-fpm is already loaded in the docker-compose.yml, we can remove it from the list...
+        unset($services[array_search('php-fpm', $services)]);
 
         // Adds the new services as dependencies of the laravel.test service...
         if (! array_key_exists('laravel.test', $compose['services'])) {
@@ -104,7 +107,7 @@ class DockerComposeBuilder
             $compose['services']['selenium']['image'] = 'seleniarm/standalone-chromium';
         }
 
-        file_put_contents($this->laravel->basePath('docker-compose.yml'), Yaml::dump($compose, Yaml::DUMP_OBJECT_AS_MAP));
+        file_put_contents(base_path('docker-compose.yml'), Yaml::dump($compose, Yaml::DUMP_OBJECT_AS_MAP));
     }
 
     protected function composeFile(?string $path = null): mixed
@@ -115,17 +118,22 @@ class DockerComposeBuilder
             return Yaml::parseFile($composePath);
         }
 
-        // If no file exists, we'll try to return Sail's default docker-compose.yml as per version 1.31...
-        $sailPath = __DIR__ . '/../../../vendor/laravel/sail/stubs/docker-compose.stub';
-        if (file_exists($sailPath)) {
-            return Yaml::parseFile($sailPath);
+        // If no file exists, we'll try to return our own default docker-compose.yml...
+        $ownPath = base_path('vendor/garanaw/sailor/stubs/docker-compose.yml');
+        if (file_exists($ownPath)) {
+            return Yaml::parseFile($ownPath);
         }
 
-        // If no file exists, we'll try to return our own default docker-compose.yml...
-        $ownPath = __DIR__ . '/../../../stubs/docker-compose.stub';
-        return file_exists($ownPath)
-            ? Yaml::parseFile($ownPath)
+        // If no file exists, we'll try to return Sail's default docker-compose.yml as per version 1.31...
+        $sailPath = base_path('vendor/laravel/sail/stubs/docker-compose.stub');
+        return file_exists($sailPath)
+            ? Yaml::parseFile($sailPath)
             : [];
+    }
+
+    protected function mapServiceKey(string $key): string
+    {
+        return $this->keyMapping[$key] ?? $key;
     }
 
     protected function pathFor(string $service): string
@@ -137,17 +145,19 @@ class DockerComposeBuilder
 
     protected function stubPathFor(string $service): string
     {
-        return $this->pathFor($service) . "/{$service}.stub";
+        return base_path($this->pathFor($service) . "/{$service}.stub");
     }
 
     protected function stubContentFor(string $service): array
     {
-        return Yaml::parseFile($this->stubPathFor($service))[$service];
+        $stubContent = Yaml::parseFile($this->stubPathFor($service));
+
+        return $stubContent[$this->mapServiceKey($service)];
     }
 
     public function replaceEnvVariables(array $services): void
     {
-        $environment = file_get_contents($this->laravel->basePath('.env'));
+        $environment = file_get_contents(base_path('.env'));
 
         if (in_array('php-fpm', $services)) {
             $vars = [
@@ -163,10 +173,5 @@ class DockerComposeBuilder
                 );
             }
         }
-    }
-
-    public function configurePhpUnit(): void
-    {
-        // Implement configurePhpUnit() method.
     }
 }
